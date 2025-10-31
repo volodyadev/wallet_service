@@ -1,0 +1,48 @@
+version: '3.2'
+
+services:
+  wallet_service:
+    container_name: wallet_service
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    image: wallet_service
+    restart: always
+    environment:
+      - DEBUG=${DEBUG}
+      - APP_HOST=${APP_HOST}
+      - APP_RELOAD=${APP_RELOAD}
+      - APP_PORT=${APP_PORT}
+      - DB_HOST_POSTGRES=${DB_HOST_POSTGRES}
+      - DB_PORT_POSTGRES=${DB_PORT_POSTGRES}
+      - DB_NAME_POSTGRES=${DB_NAME_POSTGRES}
+      - DB_USERNAME_POSTGRES=${DB_USERNAME_POSTGRES}
+      - DB_PASSWORD_POSTGRES=${DB_PASSWORD_POSTGRES}
+      - DB_ECHO_POSTGRES=${DB_ECHO_POSTGRES}
+      - TZ=${TZ}
+      - APP_NAME=${APP_NAME}
+    volumes:
+      - ./configs/supervisord:/etc/supervisor/conf.d
+      - ./src:/src
+      - /opt/project/services/files/files:/src/files
+    ports:
+      - "${EXTERNAL_APP_PORT}:${APP_PORT}"
+    depends_on:
+      - wallet_postgres
+
+  wallet_postgres:
+    image: postgres:16
+    container_name: wallet_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME_POSTGRES}
+      POSTGRES_USER: ${DB_USERNAME_POSTGRES}
+      POSTGRES_PASSWORD: ${DB_PASSWORD_POSTGRES}
+      TZ: ${TZ}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT_POSTGRES}:${DB_PORT_POSTGRES}"
+
+volumes:
+  pgdata:
